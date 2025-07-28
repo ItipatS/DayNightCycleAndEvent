@@ -74,6 +74,7 @@ local function applyDayNight(phaseType, moonPhase, duration, totalDuration)
         local halfNight = totalDuration/2
         tween(halfNight, {ClockTime = 24})
         task.wait(halfNight)
+        Lighting.ClockTime = 24
         tween(halfNight, {ClockTime = endTime})
     end
 
