@@ -1,0 +1,65 @@
+-- ModuleScript: AmbientBGMService
+local SoundService = game:GetService("SoundService")
+local TweenService = game:GetService("TweenService")
+
+local FADE_TIME = 5 -- seconds
+
+local Tracks = {
+    Day = "rbxassetid://92915020154321",      -- Replace with your day music asset ID
+    Night = "rbxassetid://70602837406281",    -- Replace with your night music asset ID
+    BloodMoon = "rbxassetid://1843531123",-- Replace with your event music asset ID
+    Rain = "rbxassetid://1843531789",     -- Example event music
+    -- Add more as needed
+}
+
+local currentSound = nil
+local currentTrackKey = nil
+
+local function fadeOut(sound)
+    if sound and sound.IsPlaying then
+        local tween = TweenService:Create(sound, TweenInfo.new(FADE_TIME), {Volume = 0})
+        tween:Play()
+        tween.Completed:Wait()
+        sound:Stop()
+        sound:Destroy()
+    end
+end
+
+local function fadeIn(trackId)
+    local sound = Instance.new("Sound")
+    sound.SoundId = trackId
+    sound.Volume = 0
+    sound.Looped = true
+    sound.Parent = SoundService
+    sound:Play()
+    local tween = TweenService:Create(sound, TweenInfo.new(FADE_TIME), {Volume = 0.5})
+    tween:Play()
+    return sound
+end
+
+local function getEventBGM(events)
+    for _, event in ipairs(events) do
+        if Tracks[event.name] then
+            return event.name
+        end
+    end
+    return nil
+end
+
+local function updateBGM(phase, events)
+    local trackKey = getEventBGM(events) or phase
+    print(phase, events, trackKey)
+    if trackKey == currentTrackKey then return end
+    local trackId = Tracks[trackKey]
+    if not trackId then return end
+    local oldSound = currentSound
+    currentSound = fadeIn(trackId)
+    currentTrackKey = trackKey
+    if oldSound then
+        fadeOut(oldSound)
+    end
+end
+
+return {
+    updateBGM = updateBGM
+} 
