@@ -6,20 +6,23 @@ local EventRenderer = require(script.EventRenderer)
 local BGMService = require(script.Parent.SoundHandler.BGMService)
 local AmbientService = require(script.Parent.SoundHandler.AmbientService)
 
-Net.DayNightAndEvent.listen(function(payload)
-    print("DayNight Data", payload)
-    local phase = payload.phase
-    local moon = payload.moonPhase
-    local duration = payload.duration
-    local totalDuration = payload.totalDuration
-    local events = payload.events or {}
+Net.DayNight.listen(function(Data)
+    print("DayNight Data", Data)
+    local phase = Data.phase
+    local moon = Data.moonPhase
+    local duration = Data.duration
+    local totalDuration = Data.totalDuration
+    local events = Data.events or {}
 
     BGMService.updateBGM(phase, events)
     AmbientService.updateAmbient(phase, events)
 
     DayNightRenderer.applyDayNight(phase, moon, duration, totalDuration)
-    EventRenderer.applyEvents(events)
-
 end)
-
+Net.Event.listen(function(Events)
+    print("Events Data", Events)
+    BGMService.updateBGM({}, Events)
+    AmbientService.updateAmbient({}, Events)
+    EventRenderer.applyEvents(Events)
+end)
 return {} 

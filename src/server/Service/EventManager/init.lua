@@ -7,32 +7,37 @@ local EventDefinitions = require(script.EventDefinitions)
 local MoonPhase = require(script.MoonPhase)
 
 local EventManager = {}
+
 local activeEvents = {}
 local eventIdCounter = 0
-
+-- Random event scheduler
+local randomEventCheckInterval = 60 -- seconds (in-game hour)
+local timeSinceLastCheck = 0
 -- State for day/night cycle
 local settings = {
-    dayDuration = 1,   -- minutes
-    nightDuration = 1, -- minutes
+    dayDuration = .5,   -- minutes
+    nightDuration = .5, -- minutes
 }
-
 local currentPhase = "Day"         -- "Day" or "Night"
 local durationLeft = settings.dayDuration
 local currentMoonPhase = MoonPhase:GetPhaseName()
 
-local function getStatePayload()
+local function getTimeState()
     local totalDuration = (currentPhase == "Day") and settings.dayDuration or settings.nightDuration
     return {
         phase = currentPhase,
         duration = durationLeft,
         totalDuration = totalDuration,
         moonPhase = currentMoonPhase,
-        events = EventManager:GetActiveEvents(),
     }
 end
 
+local function getEventState()
+    return activeEvents
+end
+
 function EventManager:GetCurrentState()
-    return getStatePayload()
+    return getTimeState()
 end
 
 function EventManager:GetActiveEvents()
@@ -52,7 +57,7 @@ function EventManager:TriggerEvent(eventName, duration, conditions, source)
         source = source,
     }
     table.insert(activeEvents, event)
-    EventManager._markDirty()
+    EventManager._markEventDirty()
     return event.id
 end
 
@@ -60,7 +65,7 @@ function EventManager:RemoveEvent(eventId)
     for i, event in ipairs(activeEvents) do
         if event.id == eventId then
             table.remove(activeEvents, i)
-            EventManager._markDirty()
+            EventManager._markEventDirty()
             break
         end
     end
@@ -76,15 +81,22 @@ function EventManager:Update()
         end
     end
     if changed then
-        EventManager._markDirty()
+        EventManager._markEventDirty()
     end
 end
 
 -- Dirty flag and last payload for event-based networking
-local dirty = true
-local lastPayload = nil
-function EventManager._markDirty()
-    dirty = true
+local timeDirty = true
+local eventDirty = false
+local lastTime = nil
+local lastEvent = nil
+
+function EventManager._markTimeDirty()
+    timeDirty = true
+end
+
+function EventManager._markEventDirty()
+    eventDirty = true
 end
 
 local function shallowEventListEqual(a, b)
@@ -98,28 +110,35 @@ local function shallowEventListEqual(a, b)
 end
 
 local function sendIfChanged()
-    if not dirty then return end
-    local payload = getStatePayload()
-    local changed = false
-    if not lastPayload or
-       payload.phase ~= lastPayload.phase or
-       payload.moonPhase ~= lastPayload.moonPhase or
-       #payload.events ~= #lastPayload.events or
-       not shallowEventListEqual(payload.events, lastPayload.events) then
-        changed = true
+    if not timeDirty and not eventDirty then return end
+    local timeState = getTimeState()
+    local eventState = getEventState()
+    local timeChanged = false
+    local eventChanged = false
+    
+    if not lastTime or
+       timeState.phase ~= lastTime.phase or
+       timeState.moonPhase ~= lastTime.moonPhase then
+        timeChanged = true
+    elseif not lastEvent or
+            not shallowEventListEqual(eventState, lastEvent) then
+                eventChanged = true
     end
-    if changed then
+    if timeChanged then
         for _, player in ipairs(Players:GetPlayers()) do
-            Net.DayNightAndEvent.sendTo(payload, player)
+            Net.DayNight.sendTo(timeState, player)
         end
-        lastPayload = payload
-        dirty = false
+        lastTime = timeState
+        timeDirty = false
+    elseif eventChanged then
+        for _, player in ipairs(Players:GetPlayers()) do
+            Net.Event.sendTo(eventState, player)
+        end
+        lastEvent = eventState
+        eventDirty = false
     end
 end
 
--- Random event scheduler
-local randomEventCheckInterval = 60 -- seconds (in-game hour)
-local timeSinceLastCheck = 0
 
 local function tryTriggerRandomEvent()
     local now = os.clock()
@@ -145,7 +164,7 @@ local function tryTriggerRandomEvent()
         end
         if alreadyActive then continue end
         -- Roll chance (5%)
-        if math.random() < 0.05 then
+        if math.random() < 0.15 then
             local duration = math.random(def.minDuration, def.maxDuration)
             EventManager:TriggerEvent(eventName, duration, {phase = currentPhase}, "random")
             def.lastTriggered = now
@@ -172,13 +191,14 @@ RunService.Heartbeat:Connect(function(dt)
             currentPhase = "Day"
             durationLeft = settings.dayDuration
         end
-        EventManager._markDirty()
+        EventManager._markTimeDirty()
     end
     sendIfChanged()
 end)
 
 Players.PlayerAdded:Connect(function(player)
-    Net.DayNightAndEvent.sendTo(getStatePayload(), player)
+    Net.DayNight.sendTo(getTimeState(), player)
+    Net.Event.sendTo(getEventState(), player)
 end)
 
-return EventManager 
+return EventManager
