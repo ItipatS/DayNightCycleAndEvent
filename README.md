@@ -2,6 +2,11 @@
 
 This module provides a complete **day-night cycle** and **environmental event system** for Roblox games, designed to bring immersive, dynamic worlds to life. It handles lighting, ambient sound, background music, and rare special events like **Solar Eclipses**, **Blood Moons**, and **Rain** — all synchronized across server and clients.
 
+## Demo Video
+<a href="(https://youtu.be/TtI_wA-DBR0)" target="_blank" rel="noopener noreferrer">
+  <img src="https://img.youtube.com/vi/TtI_wA-DBR0/hqdefault.jpg" alt="Watch the video">
+</a>
+
 ---
 
 ## 🎮 Features
