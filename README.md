@@ -1,5 +1,9 @@
 # 🌗 Day-Night Cycle & Dynamic Event System for Roblox
 
+game link 
+
+https://www.roblox.com/games/125022717347718/HarvestTycoon-Alpha
+
 This module provides a complete **day-night cycle** and **environmental event system** for Roblox games, designed to bring immersive, dynamic worlds to life. It handles lighting, ambient sound, background music, and rare special events like **Solar Eclipses**, **Blood Moons**, and **Rain** — all synchronized across server and clients.
 
 ## Demo Video
