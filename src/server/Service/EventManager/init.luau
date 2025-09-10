@@ -127,11 +127,13 @@ local function tryTriggerRandomEvent()
         -- Check if already active
         local alreadyActive = false
         for _, event in ipairs(activeEvents) do
-            if event.name == eventName then
+            if event.Name == eventName then
                 alreadyActive = true
                 break
             end
         end
+
+        if alreadyActive then continue end
 
         -- Roll chance (15%)
         if math.random() < 0.15 then
