@@ -36,7 +36,7 @@ local PhasePresets = {
     },
 }
 
-local function tween(duration, goal)
+local function tween(duration:number, goal): ()
     if tweenRef then
         tweenRef:Cancel()
     end
@@ -51,7 +51,7 @@ local function tween(duration, goal)
     tweenRef:Play()
 end
 
-local function applyDayNight(Data:Net.DayNightData)
+local function applyDayNight(Data:Net.DayNightData): ()
     local phaseType = Data.Phase
     local moonPhase = Data.Moon
     local totalDuration = Data.TotalDuration

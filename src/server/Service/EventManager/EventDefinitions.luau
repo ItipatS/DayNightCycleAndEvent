@@ -1,6 +1,15 @@
 -- ModuleScript: EventDefinitions
 
-local EventDefinitions = {
+type EventDef = {
+    allowedPhases: { "Day" | "Night" },
+    minInterval: number,      -- seconds
+    minDuration: number,      -- seconds
+    maxDuration: number,      -- seconds
+    lastTriggered: number,    -- os.clock() time
+}
+type EventDefinitionsType = { [string]: EventDef }
+
+local EventDefinitions:EventDefinitionsType = {
     ["LunarEclipse"] = {
         allowedPhases = {"Night"},
         minDuration = 60,
@@ -31,4 +40,4 @@ local EventDefinitions = {
     },
 }
 
-return EventDefinitions 
+return EventDefinitions

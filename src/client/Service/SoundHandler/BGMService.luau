@@ -1,4 +1,13 @@
+--!strict
 -- ModuleScript: AmbientBGMService
+local StarterPlayer = game:GetService("StarterPlayer")
+local Net = require(StarterPlayer.StarterPlayerScripts.Client.clientNet)
+
+type Phase = Net.DayPhase                      -- e.g. "Day" | "Night" | "Dawn" | "Dusk"          -- e.g. "Rain" | "Market" | ...
+type Events = Net.EventPackage
+
+type BGMHandler = ({Phase:Phase, Event:Events?}) -> ()
+
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
@@ -7,15 +16,13 @@ local FADE_TIME = 5 -- seconds
 local Tracks = {
     Day = "rbxassetid://92915020154321",      -- Replace with your day music asset ID
     Night = "rbxassetid://70602837406281",    -- Replace with your night music asset ID
-    BloodMoon = "rbxassetid://1843531123",-- Replace with your event music asset ID
-    Rain = "rbxassetid://1843531789",     -- Example event music
     -- Add more as needed
 }
 
-local currentSound = nil
+local currentSound:Sound = nil
 local currentTrackKey = nil
 
-local function fadeOut(sound)
+local function fadeOut(sound:Sound)
     if sound and sound.IsPlaying then
         local tween = TweenService:Create(sound, TweenInfo.new(FADE_TIME), {Volume = 0})
         tween:Play()
@@ -25,7 +32,7 @@ local function fadeOut(sound)
     end
 end
 
-local function fadeIn(trackId)
+local function fadeIn(trackId: string): Sound
     local sound = Instance.new("Sound")
     sound.SoundId = trackId
     sound.Volume = 0
@@ -37,7 +44,7 @@ local function fadeIn(trackId)
     return sound
 end
 
-local function getEventBGM(events)
+local function getEventBGM(events: Events?)
     for _, event in ipairs(events) do
         if Tracks[event.name] then
             return event.name
@@ -46,12 +53,18 @@ local function getEventBGM(events)
     return nil
 end
 
-local function updateBGM(phase, events)
-    local trackKey = getEventBGM(events) or phase
-    print(phase, events, trackKey)
+local updateBGM:BGMHandler = function(input)
+
+    local phase:Phase = input.Phase
+    local events = input.Events or {}
+
+    local override = getEventBGM(events)
+    local trackKey = override or phase
     if trackKey == currentTrackKey then return end
+
     local trackId = Tracks[trackKey]
     if not trackId then return end
+    
     local oldSound = currentSound
     currentSound = fadeIn(trackId)
     currentTrackKey = trackKey
