@@ -1,11 +1,14 @@
--- ModuleScript: DayNightRenderer
+--!strict
+local StarterPlayer = game:GetService("StarterPlayer")
+local Net = require(StarterPlayer.StarterPlayerScripts.Client.clientNet)
+
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 
 local tweenRef
 
 local MoonTextures = {
-    ["Full Moon"] = "rbxassetid://17684523086"
+    ["FullMoon"] = "rbxassetid://17684523086"
     --[[["Full Moon"] = "rbxassetid://127888319954388",
 	["Waning Gibbous"] = "rbxassetid://108881093429414",
 	["Third Quarter"] = "rbxassetid://133433888402620",
@@ -48,7 +51,12 @@ local function tween(duration, goal)
     tweenRef:Play()
 end
 
-local function applyDayNight(phaseType, moonPhase, duration, totalDuration)
+local function applyDayNight(Data:Net.DayNightData)
+    local phaseType = Data.Phase
+    local moonPhase = Data.Moon
+    local totalDuration = Data.TotalDuration
+    local duration = Data.Duration
+
     local config = PhasePresets[phaseType]
     if not config then return end
 
@@ -59,23 +67,25 @@ local function applyDayNight(phaseType, moonPhase, duration, totalDuration)
     Lighting.FogColor = config.fog
     Lighting.FogEnd = config.fogEnd
 
-    totalDuration = (totalDuration or 10) * 60 -- fallback for debug
-    duration = (duration or 10) * 60 -- fallback for debug
-    
-    local progress = 1 - (duration / totalDuration)
+    local total = (totalDuration or 10) * 60 -- fallback for debug
+    local dur  = (duration or 10) * 60 -- fallback for debug
+    local progress = total > 0 and (1 - (dur / total)) or 0
+
     local startTime = config.start
     local endTime = config.target
     local currentTime = startTime + (endTime - startTime) * progress
     Lighting.ClockTime = currentTime
 
     if phaseType == "Day" then
-        tween(totalDuration, {ClockTime = endTime})
+        tween(total, {ClockTime = endTime})
     elseif phaseType == "Night" then
-        local halfNight = totalDuration/2
-        tween(halfNight, {ClockTime = 24})
-        task.wait(halfNight)
-        Lighting.ClockTime = 24
-        tween(halfNight, {ClockTime = endTime})
+        local halfNight = total/2
+        local t1:Tween= tween(halfNight, {ClockTime = 23.99})
+         t1.Completed:Once(function()
+            -- Wrap to 0 cleanly before continuing
+            Lighting.ClockTime = 0
+            tween(halfNight, { ClockTime = endTime })
+        end)
     end
 
     if Lighting:FindFirstChild("Sky") then

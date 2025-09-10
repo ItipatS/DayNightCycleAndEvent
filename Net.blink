@@ -1,0 +1,44 @@
+-- these can be ignored if you are using the studio plugin
+option ClientOutput = "src/client/clientNet.luau"
+option ServerOutput = "src/server/serverNet.luau"
+
+enum DayPhase = {
+    Day, Night
+}
+
+enum MoonPhase = {
+  NewMoon, WaxingCrescent, FirstQuarter, WaxingGibbous,
+  FullMoon, WaningGibbous, ThirdQuarter, WaningCrescent
+}
+
+struct DayNightData {
+  Phase: DayPhase,      -- u8
+  Duration: f16,     -- server epoch seconds at phase start
+  TotalDuration: f16,     -- seconds length of this phase (0..65535)
+  Moon: MoonPhase       -- u8
+}
+
+struct EventData {
+  Name:string,
+  StartTime:f16,
+  EndTime:f16,
+  Duration:u8,
+  Source:string
+}
+
+map EventPackage = { [u32]:EventData  }
+ ---------------- Interest (Reliable) ---------------- 
+ 
+event DayNight {
+    from: Server,
+    type: Reliable,
+    call: SingleSync,
+    data: DayNightData
+}
+
+event Event {
+    from: Server,
+    type: Reliable,
+    call: SingleSync,
+    data: EventPackage
+}

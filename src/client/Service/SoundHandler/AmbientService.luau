@@ -1,4 +1,9 @@
--- ModuleScript: AmbientService
+--!strict
+
+local StarterPlayerScripts = game:GetService("StarterPlayer").StarterPlayerScripts
+
+local Net = require(StarterPlayerScripts.Client.clientNet)
+
 local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 
@@ -46,7 +51,7 @@ local function getEventAmbient(events)
     return nil
 end
 
-local function updateAmbient(phase, events)
+local function updateAmbient(phase, events:Net.EventPackage)
     local trackKey = getEventAmbient(events) or phase
     print(phase, events, trackKey)
     if trackKey == currentTrackKey then return end
@@ -62,4 +67,4 @@ end
 
 return {
     updateAmbient = updateAmbient
-} 
+}

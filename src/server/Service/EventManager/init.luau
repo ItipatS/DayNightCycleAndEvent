@@ -13,6 +13,7 @@ local eventIdCounter = 0
 -- Random event scheduler
 local randomEventCheckInterval = 60 -- seconds (in-game hour)
 local timeSinceLastCheck = 0
+
 -- State for day/night cycle
 local settings = {
     dayDuration = .5,   -- minutes
