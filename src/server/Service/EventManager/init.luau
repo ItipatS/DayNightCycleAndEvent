@@ -1,6 +1,5 @@
 --!strict
 -- ServerScriptService: EventManager
-local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Net = require(ServerScriptService.Server.serverNet)

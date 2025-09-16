@@ -3,19 +3,21 @@ local MoonPhase = {}
 local current = 1
 
 local Phases = {
-	[1] = "Full Moon",
-	[2] = "Waning Gibbous",
-	[3] = "Third Quarter",
-	[4] = "Waning Crescent",
-	[5] = "New Moon",
-	[6] = "Waxing Crescent",
-	[7] = "First Quarter",
-	[8] = "Waxing Gibbous",
+	[1] = "FullMoon",
+	[2] = "WaningGibbous",
+	[3] = "ThirdQuarter",
+	[4] = "WaningCrescent",
+	[5] = "NewMoon",
+	[6] = "WaxingCrescent",
+	[7] = "FirstQuarter",
+	[8] = "WaxingGibbous",
 }
 
 function MoonPhase:Next()
 	current += 1
-	if current > 8 then current = 1 end
+	if current > 8 then
+		current = 1
+	end
 	return Phases[current]
 end
 
